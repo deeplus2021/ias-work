@@ -19,17 +19,36 @@ from fastapi.routing import APIRoute
 from mainApi.config import STATIC_PATH
 # from mainApi.config import connect_db, close_db
 # from mainApi.app.images.utils import file
+import logging
+from fastapi.logger import logger as fastapi_logger
+
+
+gunicorn_error_logger = logging.getLogger("gunicorn.error")
+gunicorn_logger = logging.getLogger("gunicorn")
+uvicorn_access_logger = logging.getLogger("uvicorn.access")
+uvicorn_access_logger.handlers = gunicorn_error_logger.handlers
+fastapi_logger.handlers = gunicorn_error_logger.handlers
+fastapi_logger.setLevel(logging.DEBUG)
 
 middleware = [
     Middleware(
         CORSMiddleware,
         allow_origins=['*'],
-        allow_credentials=True,
         allow_methods=['*'],
         allow_headers=['*']
     )
 ]
 app = FastAPI(title='IAS Project', middleware=middleware)
+
+# app = FastAPI(title='IAS Project')
+# origins = ['*']
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=origins,
+#     allow_credentials=True,
+#     allow_methods=['*'],
+#     allow_headers=['*']
+# )
 
 script_dir = os.path.dirname(__file__)
 st_abs_file_path = os.path.join(script_dir, "static/")

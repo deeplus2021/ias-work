@@ -21,21 +21,14 @@ const Dec2dDialog = () => {
         console.log("flag Status---> Action");
     };
 
-    const selectROI = () => {
-        console.log("selectROI");
-    };
-
     return (
         <>
             <Dialog open={dialogFlag} onClose={close} maxWidth={"350"} >
                 <div className="d-flex border-bottom">
                     <DialogTitle>2D Deconvolution</DialogTitle>
-                    <button className="dialog-close-btn" color="primary" size="small" onClick={close}>&times;</button>
+                    <button className="dialog-close-btn" color="primary" onClick={close}>&times;</button>
                 </div>
                 <div className='d-flex justify-content-around mx-5 my-2' style={{ width: 350 }}>
-                    <Col className="d-flex justify-center align-center pa-0">
-                        <Button variant="contained" color="info" size="md" style={{width:"80%"}} onClick={selectROI}>ROI</Button>
-                    </Col>
                     <Col className="pa-0">
                         <ListSubheader>Effectiveness</ListSubheader>
                         <Slider size="small" defaultValue={50} />
@@ -43,8 +36,9 @@ const Dec2dDialog = () => {
                 </div>
                 <div className='border-top mt-2'>
                     <DialogActions>
-                        <Button className="" variant="contained" color="success" size="medium" onClick={action}>Action</Button>
-                        <Button className="" variant="contained" color="primary" size="medium" onClick={close}>OK</Button>
+                        <Button className="" variant="contained" color="success" size="medium" onClick={close}>Cancel</Button>
+                        <Button className="" variant="contained" color="primary" size="medium" onClick={action}>Set</Button>
+                        <Button className="" variant="contained" color="primary" size="medium" onClick={action}>Set All</Button>
                     </DialogActions>
                 </div>
             </Dialog>

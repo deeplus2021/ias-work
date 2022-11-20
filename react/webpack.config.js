@@ -11,7 +11,17 @@ const config = {
                 type: 'javascript/auto'
             }
         ]
-    }
+    },
+    devServer: {
+        headers: { "Access-Control-Allow-Origin": "*" },
+        proxy: {
+            '/localhost:8000': {
+                target: 'http://localhost:8000/',
+                changeOrigin: false,
+                ws: true
+            }
+        }
+    },
 }
 
 module.exports = config
