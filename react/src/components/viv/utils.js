@@ -14,6 +14,9 @@ import {GLOBAL_SLIDER_DIMENSION_FIELDS} from './constants';
 import * as api_tiles from '../../api/tiles';
 import {getImageByUrl} from '../../api/fetch';
 import store from '../../reducers';
+import {
+    useViewerStore
+} from './state';
 
 const MAX_CHANNELS_FOR_SNACKBAR_WARNING = 40;
 
@@ -120,7 +123,7 @@ export async function createLoader(urlOrFile, contents, handleOffsetsNotFound, h
             console.log("utils.js  loadMultiTiff ------- contents : ", contents, files);
             let minC = -1, maxC = -1;
             let minZ = -1, maxZ = -1;
-            for (let i = 0; i < files.length; i++) {
+            for (let i = 0; i < contents.length; i++) {
                 if (minC === -1 || contents[i].channel < minC) {
                     minC = contents[i].channel;
                 }
@@ -134,25 +137,28 @@ export async function createLoader(urlOrFile, contents, handleOffsetsNotFound, h
                     maxZ = contents[i].z;
                 }
             }
-            console.log("utils.js  loadMultiTiff ------- (minC maxC) = (", minC, maxC, "), (minZ maxZ) = (", minZ, maxZ, ")");
+            // console.log("utils.js  loadMultiTiff ------- (minC maxC) = (", minC, maxC, "), (minZ maxZ) = (", minZ, maxZ, ")");
             let multiTiffSources = [];
-            for (let c = minC; c <= maxC; c++) {
-                for (let z = minZ; z <= maxZ; z++) {
-                    let found = false;
-                    for (let i = 0; i < files.length; i++) {
+            let channelMap = [];
+            for (let z = minZ; z <= maxZ; z++) {
+                let channel = 0;
+                for (let c = minC; c <= maxC; c++) {
+                    for (let i = 0; i < contents.length; i++) {
                         if (c === contents[i].channel && z === contents[i].z) {
-                            multiTiffSources.push([{t: 0, c: contents[i].channel, z: contents[i].z}, files[i]]);
-                            found = true;
+                            // multiTiffSources.push([{t: 0, c: contents[i].channel - minC, z: contents[i].z - minZ}, files[i]]);
+                            multiTiffSources.push([{t: 0, c: channel, z: contents[i].z - minZ}, files[i]]);
+                            if (z == minZ) {
+                                channelMap.push(contents[i].channel);
+                            }
+                            channel++;
                             break;
                         }
                     }
-                    // if (!found) {
-                    //     multiTiffSources.push([{t: 0, c: c, z: z}, undefined]);
-                    // }
                 }
             }
+            useViewerStore.setState({ channelMap: channelMap });
             // for (let i = 0; i < files.length; i++) {
-            //     multiTiffSources[i] = [{c: contents[i].channel, z: contents[i].z, t: 0}, files[i]];
+            //     multiTiffSources[i] = [{c: i, z: 0, t: 0}, files[i]];
             // }
             // let channels = []; let times = []; let index_file = 0;
             // for (let i = 0; i < contents.length; i++) {
@@ -169,10 +175,10 @@ export async function createLoader(urlOrFile, contents, handleOffsetsNotFound, h
             //         index_file = index_file + 1;
             //     }
             // }
-            console.log("utils.js  createLoader ------- 003: ", multiTiffSources);
+            console.log("utils.js  createLoader ------- 003: ", multiTiffSources, channelMap);
             try {
-                // const source = await loadMultiTiff(multiTiffSources);
-                const source = await loadMultiTiff(multiTiffSources, { images: 'all', pool: false });
+                const source = await loadMultiTiff(multiTiffSources);
+                // const source = await loadMultiTiff(multiTiffSources, { images: 'all', pool: false });
                 console.log("utils.js  loadMultiTiff ------- source : ", source);
                 return source;
             } catch (e) {
@@ -314,13 +320,16 @@ export function useWindowSize(isFull, scaleWidth, scaleHeight) {
 
 export async function getSingleSelectionStats2D({loader, selection}) {
     const data = Array.isArray(loader) ? loader[loader.length - 1] : loader;
+    console.log("utils.js: getSingleSelectionStats2D: data = ", data, ", selection = ", selection);
     const raster = await data.getRaster({selection});
+    // console.log("utils.js: getSingleSelectionStats2D: raster = ", raster);
     const selectionStats = getChannelStats(raster.data);
     const {domain, contrastLimits} = selectionStats;
     return {domain, contrastLimits};
 }
 
 export async function getSingleSelectionStats3D({loader, selection}) {
+    console.log("utils.js: getSingleSelectionStats3D: selection = ", selection);
     const lowResSource = loader[loader.length - 1];
     const {shape, labels} = lowResSource;
     // eslint-disable-next-line no-bitwise
