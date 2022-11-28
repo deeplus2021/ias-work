@@ -19,6 +19,7 @@ from mainApi.app.auth.models.user import UserModelDB, CreateUserModel, CreateUse
 from mainApi.app.db.mongodb import get_database
 import qrcode
 import qrcode.image.svg
+import logging
 # CRUD
 
 
@@ -193,7 +194,7 @@ async def login_swagger(form_data: OAuth2PasswordRequestForm, db: AsyncIOMotorCl
     print(form_data.username, form_data.password)
     password = form_data.password[:-6]  # exclude the last 6 digits
     otp = form_data.password[-6:]  # include only the last 6 digits
-
+    print(otp)
     # username is email
     user: UserModelDB = await get_user_by_email(form_data.username, db)
     is_user_auth = authenticate_user(user, password=password, otp=otp)
