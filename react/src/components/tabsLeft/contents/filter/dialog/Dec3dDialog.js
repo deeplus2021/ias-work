@@ -1,23 +1,23 @@
-import * as React from 'react';
-import { Col } from 'react-bootstrap';
-import Button from '@mui/material/Button';
-import ListSubheader from '@mui/material/ListSubheader';
-import Slider from '@mui/material/Slider';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogActions from '@mui/material/DialogActions';
-import { useFlagsStore } from "../../../../state";
+import * as React from 'react'
+import { Col } from 'react-bootstrap'
+import Button from '@mui/material/Button'
+import ListSubheader from '@mui/material/ListSubheader'
+import Slider from '@mui/material/Slider'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogActions from '@mui/material/DialogActions'
+import { useFlagsStore } from "../../../../state"
 
 const Dec3dDialog = () => {
 
-    const Dialog3dflag = useFlagsStore(store => store.Dialog3dflag);
+    const Dialog3dflag = useFlagsStore(store => store.Dialog3dflag)
     const close = () => {
-        useFlagsStore.setState({ Dialog3dflag: false });
+        useFlagsStore.setState({ Dialog3dflag: false })
     };
 
     const action = () => {
-        console.log("flag Status---> Action");
-    };
+        console.log("flag Status---> Action")
+    }
 
     return (
         <>
@@ -41,6 +41,6 @@ const Dec3dDialog = () => {
                 </div>
             </Dialog>
         </>
-    );
+    )
 }
-export default Dec3dDialog;
+export default Dec3dDialog

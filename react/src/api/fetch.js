@@ -68,6 +68,7 @@ export const getImagesByNames = async function(imgNames) {
 }
 
 export const getMergedImage = async function(fileNames, newImageName, callback) {
+    // console.log("fetch.js->getMergedImage: fileNames =", fileNames, ", newImageName =", newImageName);
     const state = store.getState();
     const params = {
         "merge_req_body": fileNames.join(",") + '&' + newImageName
@@ -84,6 +85,7 @@ export const getMergedImage = async function(fileNames, newImageName, callback) 
             "Authorization": state.auth.tokenType + " " + state.auth.token,
         }
     };
+    // console.log("fetch.js->getMergedImage: options = ", options);
 
     fetch(process.env.REACT_APP_BASE_API_URL + "image/tile/get_merged_image", options)
         .then(response => {
@@ -100,6 +102,7 @@ export const getMergedImage = async function(fileNames, newImageName, callback) 
             }
         })
         .then(blob => {
+            console.log("fetch.js->getMergedImage: blob", blob);
             let file = new File([blob], newImageName, { type: "image/tiff" })
             file.path = newImageName
             callback(null, file)

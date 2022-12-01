@@ -1,25 +1,25 @@
-import * as React from 'react';
-import { Col } from 'react-bootstrap';
-import Button from '@mui/material/Button';
-import ListSubheader from '@mui/material/ListSubheader';
-import Slider from '@mui/material/Slider';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogActions from '@mui/material/DialogActions';
-import { useFlagsStore } from "../../../../state";
+import * as React from 'react'
+import { Col } from 'react-bootstrap'
+import Button from '@mui/material/Button'
+import ListSubheader from '@mui/material/ListSubheader'
+import Slider from '@mui/material/Slider'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogActions from '@mui/material/DialogActions'
+import { useFlagsStore } from "../../../../state"
 
 const Dec2dDialog = () => {
 
-    const dialogFlag = useFlagsStore(store => store.dialogFlag);
+    const dialogFlag = useFlagsStore(store => store.dialogFlag)
 
     const close = () => {
-        useFlagsStore.setState({ dialogFlag: false });
+        useFlagsStore.setState({ dialogFlag: false })
         console.log("flag Status--->" + dialogFlag);
     };
 
     const action = () => {
-        console.log("flag Status---> Action");
-    };
+        console.log("flag Status---> Action")
+    }
 
     return (
         <>
@@ -43,6 +43,6 @@ const Dec2dDialog = () => {
                 </div>
             </Dialog>
         </>
-    );
+    )
 }
-export default Dec2dDialog;
+export default Dec2dDialog

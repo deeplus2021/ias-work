@@ -1,16 +1,16 @@
-import * as React from 'react';
-import Button from '@mui/material/Button';
+import * as React from 'react'
+import Button from '@mui/material/Button'
 
-import {useFlagsStore} from "../../../../state";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogActions from "@mui/material/DialogActions";
-import Dialog from "@mui/material/Dialog";
+import {useFlagsStore} from "../../../../state"
+import DialogTitle from "@mui/material/DialogTitle"
+import DialogActions from "@mui/material/DialogActions"
+import Dialog from "@mui/material/Dialog"
 
 const FocusDialog = () => {
-  const Focusflag = useFlagsStore(store => store.Focusflag);
+  const Focusflag = useFlagsStore(store => store.Focusflag)
   const close = () => {
-    useFlagsStore.setState({ Focusflag: false });
-  };
+    useFlagsStore.setState({ Focusflag: false })
+  }
   return (
     <>
       <Dialog open={Focusflag} onClose={close} maxWidth={"350"} >
@@ -27,6 +27,6 @@ const FocusDialog = () => {
         </div>
       </Dialog>
     </>
-  );
+  )
 }
-export default FocusDialog;
+export default FocusDialog

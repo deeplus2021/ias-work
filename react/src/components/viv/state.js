@@ -26,6 +26,8 @@ const DEFAUlT_CHANNEL_STATE = {
     colors: [],
     domains: [],
     channelMap: [],
+    tiffNames: [],
+    experimentName: "",
     selections: [],
     ids: [],
     loader: [{labels: [], shape: []}],
