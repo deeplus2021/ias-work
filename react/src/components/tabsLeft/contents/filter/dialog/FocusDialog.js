@@ -5,15 +5,30 @@ import {useFlagsStore} from "../../../../state"
 import DialogTitle from "@mui/material/DialogTitle"
 import DialogActions from "@mui/material/DialogActions"
 import Dialog from "@mui/material/Dialog"
+import Draggable from 'react-draggable'
+import Paper from "@mui/material/Paper";
 
 const FocusDialog = () => {
   const Focusflag = useFlagsStore(store => store.Focusflag)
   const close = () => {
     useFlagsStore.setState({ Focusflag: false })
   }
+
+  function PaperComponent(props) {
+    return (
+        <Draggable
+            handle="#draggable-dialog-title"
+            cancel={'[class*="MuiDialogContent-root"]'}
+        >
+          <Paper {...props} />
+        </Draggable>
+    );
+  }
+
   return (
     <>
-      <Dialog open={Focusflag} onClose={close} maxWidth={"350"} >
+      <Dialog open={Focusflag} onClose={close} maxWidth={"350"} PaperComponent={PaperComponent} hideBackdrop={true} onBackdropClick="false"
+              disableScrollLock aria-labelledby="draggable-dialog-title" >
         <div className="d-flex border-bottom">
           <DialogTitle>Focus Stack</DialogTitle>
           <button className="dialog-close-btn" color="primary" onClick={close}>&times;</button>

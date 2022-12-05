@@ -52,7 +52,7 @@ router = APIRouter(
 
 # model = models.Cellpose(model_type='cyto')
 
-model = models.Cellpose(gpu=False, model_type='cyto')
+# model = models.Cellpose(gpu=False, model_type='cyto')
 
 # Upload Image file
 @router.post("/updown_image",
@@ -89,7 +89,7 @@ async def updown_image(request: Request,
     # you can set the average cell `diameter` in pixels yourself (recommended)
     # diameter can be a list or a single number for all images
 
-    masks, flows, styles, diams = model.eval(imgs, diameter=None, channels=channels)
+    # masks, flows, styles, diams = model.eval(imgs, diameter=None, channels=channels)
     # # I will download images from website
     # urls = ['http://www.cellpose.org/static/images/img02.png',
     #         'http://www.cellpose.org/static/images/img03.png',
