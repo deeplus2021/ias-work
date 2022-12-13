@@ -51,7 +51,6 @@ router = APIRouter(
 )
 
 # model = models.Cellpose(model_type='cyto')
-
 # model = models.Cellpose(gpu=False, model_type='cyto')
 
 # Upload Image file
@@ -68,12 +67,12 @@ async def updown_image(request: Request,
 
     # list of files
     # PUT PATH TO YOUR FILES HERE!
-    files = ['http://www.cellpose.org/static/images/img02.png']
-
-    imgs = [imread(f) for f in files]
-    nimg = len(imgs)
-
-    io.save_to_png(imgs, "img2")
+    # files = ['http://www.cellpose.org/static/images/img02.png']
+    #
+    # imgs = [imread(f) for f in files]
+    # nimg = len(imgs)
+    #
+    # io.save_to_png(imgs, "img2")
 
     # define CHANNELS to run segementation on
     # grayscale=0, R=1, G=2, B=3

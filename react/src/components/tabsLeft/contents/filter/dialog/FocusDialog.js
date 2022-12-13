@@ -6,7 +6,7 @@ import DialogTitle from "@mui/material/DialogTitle"
 import DialogActions from "@mui/material/DialogActions"
 import Dialog from "@mui/material/Dialog"
 import Draggable from 'react-draggable'
-import Paper from "@mui/material/Paper";
+import Paper from "@mui/material/Paper"
 
 const FocusDialog = () => {
   const Focusflag = useFlagsStore(store => store.Focusflag)

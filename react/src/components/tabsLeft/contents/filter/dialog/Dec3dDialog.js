@@ -7,6 +7,8 @@ import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogActions from '@mui/material/DialogActions'
 import { useFlagsStore } from "../../../../state"
+import Draggable from "react-draggable"
+import Paper from "@mui/material/Paper"
 
 const Dec3dDialog = () => {
 
@@ -19,9 +21,21 @@ const Dec3dDialog = () => {
         console.log("flag Status---> Action")
     }
 
+    function PaperComponent(props) {
+        return (
+            <Draggable
+                handle="#draggable-dialog-title"
+                cancel={'[class*="MuiDialogContent-root"]'}
+            >
+                <Paper {...props} />
+            </Draggable>
+        );
+    }
+
     return (
         <>
-            <Dialog open={Dialog3dflag} onClose={close} maxWidth={"350"} >
+            <Dialog open={Dialog3dflag} onClose={close} maxWidth={"350"} PaperComponent={PaperComponent} hideBackdrop={true} onBackdropClick="false"
+                    disableScrollLock aria-labelledby="draggable-dialog-title">
                 <div className="d-flex border-bottom">
                     <DialogTitle>3D Deconvolution</DialogTitle>
                     <button className="dialog-close-btn" color="primary" onClick={close}>&times;</button>

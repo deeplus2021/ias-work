@@ -10,7 +10,6 @@ from starlette.middleware import Middleware
 
 import os
 from mainApi.app.auth.routers import router as auth_router
-from mainApi.app.cellpose.routers import router as cellpose_router
 from mainApi.app.db.mongodb_utils import connect_to_mongo, close_mongo_connection
 from mainApi.app.images.routers import router as image_router
 from mainApi.config import ALLOWED_HOSTS
@@ -71,7 +70,6 @@ app.add_event_handler("shutdown", close_mongo_connection)
 
 # ================= Routers  ===============
 app.include_router(auth_router)
-app.include_router(cellpose_router)
 app.include_router(image_router)
 
 test_router = APIRouter(

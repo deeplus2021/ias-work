@@ -103,17 +103,17 @@ def _load_image(parent, filename=None, load_seg=True):
     manual_file = os.path.splitext(filename)[0]+'_seg.npy'
     load_mask = False
     if load_seg:
-        if os.path.isfile(manual_file) and not parent.autoloadMasks.isChecked():
+        if os.path.isfile(manual_file):
             _load_seg(parent, manual_file, image=imread(filename), image_file=filename)
             return
         elif os.path.isfile(os.path.splitext(filename)[0]+'_manual.npy'):
             manual_file = os.path.splitext(filename)[0]+'_manual.npy'
             _load_seg(parent, manual_file, image=imread(filename), image_file=filename)
             return
-        elif parent.autoloadMasks.isChecked():
-            mask_file = os.path.splitext(filename)[0]+'_masks'+os.path.splitext(filename)[-1]
-            mask_file = os.path.splitext(filename)[0]+'_masks.tif' if not os.path.isfile(mask_file) else mask_file
-            load_mask = True if os.path.isfile(mask_file) else False
+        # elif parent.autoloadMasks.isChecked():
+        #     mask_file = os.path.splitext(filename)[0]+'_masks'+os.path.splitext(filename)[-1]
+        #     mask_file = os.path.splitext(filename)[0]+'_masks.tif' if not os.path.isfile(mask_file) else mask_file
+        #     load_mask = True if os.path.isfile(mask_file) else False
     try:
         print(f'GUI_INFO: loading image: {filename}')
         image = imread(filename)
