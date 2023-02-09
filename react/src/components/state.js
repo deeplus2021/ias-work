@@ -1,9 +1,9 @@
-import create from 'zustand'
+import create from 'zustand';
 
-const captialize = string => string.charAt(0).toUpperCase() + string.slice(1)
+const captialize = string => string.charAt(0).toUpperCase() + string.slice(1);
 
 const generateToggles = (defaults, set) => {
-    const toggles = {}
+    const toggles = {};
     Object.entries(defaults).forEach(([k, v]) => {
         if (typeof v === 'boolean') {
             toggles[`toggle${captialize(k)}`] = () =>
@@ -12,9 +12,9 @@ const generateToggles = (defaults, set) => {
                     [k]: !state[k]
                 }));
         }
-    })
-    return toggles
-}
+    });
+    return toggles;
+};
 
 const DEFAUlT_FLAG_STATE = {
     DialogFilter2dflag: false,
@@ -34,4 +34,4 @@ const DEFAUlT_FLAG_STATE = {
 export const useFlagsStore = create(set => ({
     ...DEFAUlT_FLAG_STATE,
     ...generateToggles(DEFAUlT_FLAG_STATE, set),
-}))
+}));

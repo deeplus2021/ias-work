@@ -2,12 +2,15 @@ import os
 import javabridge
 import bioformats
 from bioformats import logback
+import xml.etree.ElementTree as ET
 
 
 javabridge.start_vm(class_path=bioformats.JARS,
                     run_headless=True)
 
 def convert_to_ome_format(path, image_name):
+    # javabridge.start_vm(class_path=bioformats.JARS,
+    #                     run_headless=True)
     logback.basic_config()
 
     image_path = os.path.join(path, image_name) 
@@ -21,11 +24,78 @@ def convert_to_ome_format(path, image_name):
             os.remove(image_path)
             new_image_name = image_name[0:pos] + ".OME.TIF"
             new_image_path = os.path.join(path, new_image_name)
-            bioformats.formatwriter.write_image(new_image_path, image, "uint16")
-            print("convert_to_ome_format: ", image_path, new_image_path)
+
+            # javabridge.kill_vm()
+            #print("convert_to_ome_format: ", image_path, new_image_path)
             return new_image_name
+        # javabridge.kill_vm()
         return image_name
+    # javabridge.kill_vm()
     return ""
+
+def get_metadata(image_path):
+    # javabridge.start_vm(class_path=bioformats.JARS,
+    #                     run_headless=True)
+    logback.basic_config()
+    reader = bioformats.ImageReader(image_path)
+    info = reader.rdr
+
+    # omeMeta = bioformats.metadatatools.createOMEXMLMetadata()
+    # reader.setMetadataStore(omeMeta)
+    # reader.get(image_path)
+    
+    
+    omexml_metadata = bioformats.get_omexml_metadata(image_path)
+
+    # rdr = javabridge.JClassWrapper('loci.formats.in.LeicaSCNReader')()
+    # rdr.setOriginalMetadataPopulated(True)
+    # rdr.setFlattenedResolutions(False)
+    # rdr.setId(image_path)
+    # print("Series Count", rdr.getSeriesCount())
+    # print("Image Count", rdr.getImageCount())
+    # print("Res Count", rdr.getResolutionCount())
+    # rdr.setResolution(2)
+    # javabridge.kill_vm()
+    # print(omexml_metadata)
+    xmlroot = ET.fromstring(omexml_metadata)
+    # 
+    plate_data = {}
+    channels = []
+    planes = []
+    stage = {}
+    microscope = {}
+    objective = []
+    for x in xmlroot:
+        print('tag val', x.tag)
+        if 'Instrument' in x.tag:
+            for y in x:
+                if 'Microscope' in y.tag:
+                    microscope = y.attrib
+                if 'Objective' in y.tag:
+                    objective.append(y.attrib)
+        if 'Plate' in x.tag:
+            print('plate data', x.attrib)
+            plate_data =  x.attrib 
+        if 'Image' in x.tag:
+            # metadata = x.attrib
+            # print('image data', metadata)
+            print('subdata', x[0])
+            
+            for y in x:
+                if 'StageLabel' in y.tag:
+                    stage = y.attrib
+                if 'Pixels' in y.tag :
+                    metadata = y.attrib
+                    print('pixel data', metadata)
+                    for z in y:
+                        if 'Channel' in z.tag:
+                            channels.append(z.attrib)
+                        if 'Plane' in z.tag:
+                            planes.append(z.attrib)
+                    return {"objective": objective, "microscope": microscope, "metadata": metadata, "channels": channels, "planes": planes, "stage": stage, "plates": plate_data}
+                    # return metadata
+                   
+            break
 
 def write_image(pathname, pixels, pixel_type,
                 c = 0, z = 0, t = 0,

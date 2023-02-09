@@ -87,7 +87,6 @@
     "yarn": "^1.22.19",
     "zustand": "^3.4.1"
   },
-  "proxy": "http://localhost:8000/",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",

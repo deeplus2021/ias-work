@@ -8,6 +8,7 @@ from tokenize import String
 from PIL import Image
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.encoders import jsonable_encoder
+from starlette.responses import StreamingResponse
 from fastapi import (
     Request,
     Response,
@@ -25,23 +26,25 @@ import jsons
 
 from mainApi.app.auth.auth import get_current_user
 from mainApi.app.db.mongodb import get_database
-from mainApi.app.images.sub_routers.tile.models import AlignNaiveRequest, TileModelDB, AlignedTiledModel, NamePattenModel, MergeImgModel, ExperimentModel
+from mainApi.app.images.sub_routers.tile.models import AlignNaiveRequest, TileModelDB, FileModelDB, AlignedTiledModel, NamePattenModel, MergeImgModel, ExperimentModel
 from mainApi.app.images.utils.align_tiles import align_tiles_naive, align_ashlar
 from mainApi.app.images.utils.file import save_upload_file, add_image_tiles, convol2D_processing
-from mainApi.app.images.utils.experiment import add_experiment, get_experiment_data
+from mainApi.app.images.utils.experiment import add_experiment, add_experiment_with_folders, add_experiment_with_files, get_experiment_data, add_experiment_with_folder
 import mainApi.app.images.utils.deconvolution as Deconv
 import mainApi.app.images.utils.super_resolution.functions as SuperRes_Func
 from mainApi.app.images.utils.folder import get_user_cache_path, clear_path
 from mainApi.app.auth.models.user import UserModelDB, PyObjectId
 from mainApi.config import STATIC_PATH, CURRENT_STATIC
 import tifftools
+from mainApi.app.images.utils.convert import get_metadata
 
-import javabridge
-import bioformats
-from bioformats import logback
+
+# import javabridge
+# import bioformats
+# from bioformats import logback
 from mainApi.app.images.utils.contrastlimits import calculateImageStats
 
-javabridge.start_vm(class_path=bioformats.JARS)
+# javabridge.start_vm(class_path=bioformats.JARS)
 
 
 router = APIRouter(
@@ -86,9 +89,11 @@ async def delete_images(request: Request,
     files = data.get("images").split(',')
     for filePath in files:
         if not os.path.exists(filePath):
-            return JSONResponse({error: "You are attemting to delete non-existing file"})
+            #return JSONResponse({error: "You are attemting to delete non-existing file"})
+            continue
         if not os.path.isfile(filePath): 
-            return JSONResponse({error: "You are attemting to delete folder, not file"})
+            #return JSONResponse({error: "You are attemting to delete folder, not file"})
+            continue
         os.remove(filePath)
 
     for f in os.listdir(current_user_path):
@@ -110,12 +115,33 @@ async def delete_images(request: Request,
                          current_user: UserModelDB = Depends(get_current_user),
                          db: AsyncIOMotorDatabase = Depends(get_database)) -> List[ExperimentModel]:
     current_user_path = os.path.join(STATIC_PATH, str(PyObjectId(current_user.id)))
+    print(request)
     data = await request.form()
 
     files = data.get("images").split(',')
     expName = data.get('expName')
     result = await add_experiment(expName, files, clear_previous=clear_previous, current_user=current_user, db=db)
     return JSONResponse({"success": result})
+    
+#############################################################################
+# Register Experiment Name
+#############################################################################
+# @router.post("/register_experiment_name",
+#              response_description="Register Experiment_Name",
+#              status_code=status.HTTP_201_CREATED,
+#              response_model=List[ExperimentModel])
+# async def delete_images(request: Request,
+#                          clear_previous: bool = Form(False),
+#                          current_user: UserModelDB = Depends(get_current_user),
+#                          db: AsyncIOMotorDatabase = Depends(get_database)) -> List[ExperimentModel]:
+#     current_user_path = os.path.join(STATIC_PATH, str(PyObjectId(current_user.id)))
+#     print("This is requests----", request)
+#     data = await request.form()
+
+#     expName = data.get('expName')
+    
+#     result = await add_experiment_name(expName, clear_previous=clear_previous, current_user=current_user, db=db)
+#     return JSONResponse({"success": result})
 
 #############################################################################
 # Get Experiment data by name
@@ -128,17 +154,24 @@ async def get_image(expName: str,
                     current_user: UserModelDB = Depends(get_current_user),
                     db: AsyncIOMotorDatabase = Depends(get_database)) -> List[ExperimentModel]:
     # tiles = await db['experiment'].find({'expName': "experiment_1"})
-    all_tiles = [doc async for doc in db['experiment'].find()]
-    print(all_tiles)
+    # all_tiles = [doc async for doc in db['experiment'].find()]
+    #print(all_tiles)
 
     tiles = [doc async for doc in db['experiment'].find({'expName': expName, 'user_id': current_user.id})]
-    print(tiles)
+    #print(tiles)
     if len(tiles) == 0:
         return JSONResponse({"success": False, "error": "Cannot find the experiment data"})
 
     experiment = tiles[0]
     files = experiment['fileNames']
-    return JSONResponse({"success": True, "data": files})
+
+    metadatas = []
+    for file in files:
+        metadata = get_metadata(file)
+        print("get_experiment_data:", file, metadata)
+        metadatas.append(metadata)
+
+    return JSONResponse({"success": True, "data": files, "metadata": metadatas})
 
 #############################################################################
 # Get Experiment names
@@ -149,9 +182,30 @@ async def get_image(expName: str,
 async def get_image(clear_previous: bool = Form(False),
                     current_user: UserModelDB = Depends(get_current_user),
                     db: AsyncIOMotorDatabase = Depends(get_database)) -> List[str]:
-    expNames = [doc['expName'] async for doc in db['experiment'].find()]
+    expNames = [doc['expName'] async for doc in db['experiment'].find({'user_id': current_user.id})]
     print(expNames)
     return JSONResponse({"success": True, "data": expNames})
+
+#############################################################################
+# Get Experiment datas
+#############################################################################
+@router.get("/get_experiments_datas", 
+            response_description="Get Experiments",
+            response_model=List[ExperimentModel])
+async def get_experiments(clear_previous: bool = Form(False),
+                    current_user: UserModelDB = Depends(get_current_user),
+                    db: AsyncIOMotorDatabase = Depends(get_database)) -> List[ExperimentModel]:
+    # print("this is current user", current_user)
+    userId = str(PyObjectId(current_user.id))
+    # print(userId)
+    exp_datas = [doc async for doc in db['experiment'].find({'user_id': userId}, {'_id': 0, 'date': 0})]
+    # print(exp_datas)
+    # exp_datas = [doc async for doc in db['experiment'].find({'user_id': str(PyObjectId(current_user.id))})]
+    # expNames = [doc['expName'] async for doc in db['experiment'].find({'user_id':current_user.id})]
+    
+    return JSONResponse({"success": True, "data": exp_datas})
+
+    
 
 #############################################################################
 # Get Image By its full path
@@ -170,20 +224,18 @@ async def merge_image(merge_req_body: str = Body(embed=True),
 
 #############################################################################
 # New Upload Image file
+
 @router.post("/upload_images/{folder_name}",
-             response_description="Upload Image Tiles",
+             response_description="Upload Files",
              status_code=status.HTTP_201_CREATED,
-             response_model=List[TileModelDB])
+             response_model=List[FileModelDB])
 async def upload_images(folder_name: str,
-                             files: List[UploadFile] = File(...),
-                             clear_previous: bool = Form(False),
-                             current_user: UserModelDB = Depends(get_current_user),
-                             db: AsyncIOMotorDatabase = Depends(get_database)) -> List[TileModelDB]:
+                        files: List[UploadFile] = File(...),
+                        clear_previous: bool = Form(False),
+                        current_user: UserModelDB = Depends(get_current_user),
+                        db: AsyncIOMotorDatabase = Depends(get_database)) -> List[FileModelDB]:
                              
     current_user_path = os.path.join(STATIC_PATH, str(PyObjectId(current_user.id)))
-    print(folder_name)
-    print(current_user_path)
-
     # Make user directory   
     if not os.path.exists(current_user_path):
         os.makedirs(current_user_path)
@@ -203,24 +255,141 @@ async def upload_images(folder_name: str,
 
     return JSONResponse(result)
 
+#############################################################################
+# New Upload Experiment with Folder
+
+@router.post("/set_experiment",
+             response_description="Register Experiment",
+             status_code=status.HTTP_201_CREATED,
+             response_model=List[ExperimentModel])
+async def register_experiment_with_folder(
+                        request: Request,
+                        files: List[UploadFile] = File(...),
+                        clear_previous: bool = Form(False),
+                        current_user: UserModelDB = Depends(get_current_user),
+                        db: AsyncIOMotorDatabase = Depends(get_database)) -> List[ExperimentModel]:
+    data = await request.form()
+    # files = data.get('images')
+    current_user_path = os.path.join(STATIC_PATH, str(PyObjectId(current_user.id)))
+    new_experiment_path = os.path.join(current_user_path, data.get('expName'))
+    new_folder_path = os.path.join(new_experiment_path, data.get('folderName'))
+
+    print("This is user path", current_user_path)
+    print("This is experiment path", new_experiment_path)
+    print("This is folder path", new_folder_path)
+    # Make user directory   
+    if not os.path.exists(current_user_path):
+        os.makedirs(current_user_path)
+
+    # # Check if the folder exists, if not make a new one
+    # path = os.path.join(current_user_path, folder_name)
+    # print(path)
+    if os.path.isdir(new_experiment_path):
+        result = {}
+        result["exp_error"] = "Experiment name is already exist"
+        return JSONResponse(result)
+    else:
+        os.mkdir(new_experiment_path)
+
+    if os.path.isdir(new_folder_path):
+        result = {}
+        result["folder_error"] = "Folder name is already exist"
+        return JSONResponse(result)
+    else:
+        os.mkdir(new_folder_path)
+        # res = await db['tile-image-cache'].delete_many({"user_id": PyObjectId(current_user.id)})
+        result = await add_experiment_with_folder(folderPath=new_experiment_path, expName=data.get('expName'), folderName=data.get('folderName'), files=files, clear_previous=clear_previous, current_user=current_user, db=db)
+    #     result["path"] = os.path.join(CURRENT_STATIC, str(PyObjectId(current_user.id)) + "/" + folder_name)
+
+    return JSONResponse(result)
+
+@router.post("/set_experiment_with_files",
+             response_description="Register Experiment with Files",
+             status_code=status.HTTP_201_CREATED,
+             response_model=List[ExperimentModel])
+async def register_experiment_with_folder(
+                        request: Request,
+                        files: List[UploadFile] = File(...),
+                        clear_previous: bool = Form(False),
+                        current_user: UserModelDB = Depends(get_current_user),
+                        db: AsyncIOMotorDatabase = Depends(get_database)) -> List[ExperimentModel]:
+    data = await request.form()
+    # files = data.get('images')
+    current_user_path = os.path.join(STATIC_PATH, str(PyObjectId(current_user.id)))
+    new_experiment_path = os.path.join(current_user_path, data.get('expName'))
+
+    print("This is user path", current_user_path)
+    print("This is experiment path", new_experiment_path)
+    # Make user directory   
+    if not os.path.exists(current_user_path):
+        os.makedirs(current_user_path)
+
+    if os.path.isdir(new_experiment_path):
+        result = {}
+        result["error"] = "Experiment name is already exist"
+        return JSONResponse(result)
+    else:
+        os.mkdir(new_experiment_path)
+        result = await add_experiment_with_files(folderPath=new_experiment_path, expName=data.get('expName'), files=files, clear_previous=clear_previous, current_user=current_user, db=db)
+    #     result["path"] = os.path.join(CURRENT_STATIC, str(PyObjectId(current_user.id)) + "/" + folder_name)
+
+    return JSONResponse(result)
+
+#############################################################################
+## Set Experiment with folders
+@router.post("/set_experiment_with_folders",
+             response_description="Register with Folder",
+             status_code=status.HTTP_201_CREATED,
+             response_model=List[ExperimentModel])
+async def register_experiment_with_folders(
+                        request: Request,
+                        files: List[UploadFile] = File(...),
+                        clear_previous: bool = Form(False),
+                        current_user: UserModelDB = Depends(get_current_user),
+                        db: AsyncIOMotorDatabase = Depends(get_database)) -> List[ExperimentModel]:
+    data = await request.form()
+    expName = data.get('expName')
+    paths = data.get('path')
+    current_user_path = os.path.join(STATIC_PATH, str(PyObjectId(current_user.id)))
+    new_experiment_path = os.path.join(current_user_path, data.get('expName'))
+    print("This is uploaded data", paths)
+    print("this is new epxeriment path", new_experiment_path)
+
+    if not os.path.exists(current_user_path):
+        os.makedirs(current_user_path)
+
+    if os.path.isdir(new_experiment_path):
+        result = {}
+        result["error"] = "Experiment name is already exist"
+        return JSONResponse(result)
+    else:
+        os.mkdir(new_experiment_path)
+        result = await add_experiment_with_folders(folderPath=new_experiment_path, expName=data.get('expName'), files=files, paths=paths, clear_previous=clear_previous, current_user=current_user, db=db)
+    #     result["path"] = os.path.join(CURRENT_STATIC, str(PyObjectId(current_user.id)) + "/" + folder_name)
+
+    return JSONResponse(result)
 # Return one Image file
-@router.get("/get_image/{image}", 
+@router.get("/get_image/{folder}/{image}", 
             response_description="Get Image Tiles",
             response_model=List[TileModelDB])
 async def get_image(image: str,
+                    folder: str,
                     clear_previous: bool = Form(False),
                     current_user: UserModelDB = Depends(get_current_user),
                     db: AsyncIOMotorDatabase = Depends(get_database)) -> List[TileModelDB]:
+    print('image get', folder, image)
     current_user_path = os.path.join(STATIC_PATH, str(PyObjectId(current_user.id)))
-    return FileResponse(os.path.join(current_user_path + '/', image), media_type="image/tiff")
+    metadata_for_single_img = get_metadata(os.path.join(current_user_path + '/' + folder, image))
+    print('This metadata for single data--------', metadata_for_single_img)
+    return FileResponse(os.path.join(current_user_path + '/' + folder, image), media_type="image/tiff")
 
 # Return Image tree
 @router.get("/get_image_tree", 
             response_description="Get Image Tiles",
-            response_model=List[TileModelDB])
+            response_model=List[FileModelDB])
 async def get_image(clear_previous: bool = Form(False),
                     current_user: UserModelDB = Depends(get_current_user),
-                    db: AsyncIOMotorDatabase = Depends(get_database)) -> List[TileModelDB]:
+                    db: AsyncIOMotorDatabase = Depends(get_database)) -> List[FileModelDB]:
     current_user_path = os.path.join(STATIC_PATH, str(PyObjectId(current_user.id)))
 
     if os.path.isdir(current_user_path) == False:
@@ -304,23 +473,23 @@ async def _align_tiles_naive(request: AlignNaiveRequest, tiles: List[TileModelDB
         aligned_tiles = await loop.run_in_executor(pool, align_tiles_naive, request, tiles)
         return aligned_tiles
 
-@router.get("/align_tiles_ashlar",
-            response_description="Align Tiles",
-            # response_model=List[AlignedTiledModel],
-            status_code=status.HTTP_200_OK)
-async def _align_tiles_ashlar(tiles: List[TileModelDB] = Depends(get_tile_list)) -> any:
-    """
-        performs a naive aligning of the tiles simply based on the given rows and method.
-        does not perform any advanced stitching or pixel checking
+# @router.get("/align_tiles_ashlar",
+#             response_description="Align Tiles",
+#             # response_model=List[AlignedTiledModel],
+#             status_code=status.HTTP_200_OK)
+# async def _align_tiles_ashlar(tiles: List[TileModelDB] = Depends(get_tile_list)) -> any:
+#     """
+#         performs a naive aligning of the tiles simply based on the given rows and method.
+#         does not perform any advanced stitching or pixel checking
 
-        Called using concurrent.futures to make it async
-    """
+#         Called using concurrent.futures to make it async
+#     """
 
-    loop = asyncio.get_event_loop()
-    with concurrent.futures.ProcessPoolExecutor() as pool:
-        # await result
-        aligned_tiles = await loop.run_in_executor(pool, align_ashlar, tiles, "img_r{row:03}_c{col:03}.tif")
-        return aligned_tiles
+#     loop = asyncio.get_event_loop()
+#     with concurrent.futures.ProcessPoolExecutor() as pool:
+#         # await result
+#         aligned_tiles = await loop.run_in_executor(pool, align_ashlar, tiles, "img_r{row:03}_c{col:03}.tif")
+#         return aligned_tiles
 
 # Update Name and File - Name&&File Functions
 @router.post("/update",

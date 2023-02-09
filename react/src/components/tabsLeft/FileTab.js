@@ -3,9 +3,13 @@ import TabItem from '../custom/TabItem';
 import SmallCard from "../custom/SmallCard";
 import CustomButton from "../custom/CustomButton";
 import Divider from '@mui/material/Divider';
-import OpenCloudDialog from "./contents/file/OpenCloudDialog";
+import OpenCloudDialogExp from "./contents/file/OpenCloudDialog";  
+import OpenFileDialog from './contents/file/OpenFileDialog';
+import OpenFolderUpload from './contents/file/OpenFolderUpload';
+import OpenFolderDialogForUpload from './contents/file/OpenFolderDialog';
 import OpenPositionDialog from "./contents/file/OpenPositionDialog";
-import * as api_experiment from "../../api/experiment";
+import OpenCloudUploadNew from "./contents/file/OpenCloudUpload"
+// import * as api_experiment from "../../api/experiment";
 import {
     mdiCloudDownloadOutline,
     mdiEmailNewsletter,
@@ -115,9 +119,13 @@ const FileTab = (props) => {
     }
 
     const [cloudDialog, setcloudDialog] = useState(false);
-    const [folderDialog, setfolderDialog] = useState(false);
+    const [folderDialog, setFolderDialog] = useState(false);
+    const [fileDialog, setfileDialog] = useState(false);
     const [selectTab, setSelectTab] = useState(0);
     const [positionDialog, setpositionDialog] = useState(false);
+    const [cloudDialogClose, setCloudDialogClose] = useState(false);
+    const [fileDialogClose, setfileDialogClose] = useState(false);
+    const [folderDialogClose, setFolderDialogClose] = useState(false);
     const [filesUploaded, setFilesUploaded] = useState([]);
     const [treeData, setTreeData] = useState([]);
 
@@ -126,19 +134,37 @@ const FileTab = (props) => {
     }
     const setCloudDialog = () => {
         setcloudDialog(true);
+        setCloudDialogClose(false);
     }
 
     const handleClose = () => {
         setpositionDialog(false);
     }
     const handleCloudClose = () => {
-        setcloudDialog(false)
+        setcloudDialog(false);
+        setCloudDialogClose(true);
+    }
+    const setFileDialog = () => {
+        setfileDialog(true);
+        setfileDialogClose(false);
+    }
+    const handleFileClose = () => {
+        setfileDialog(false);
+        setfileDialogClose(true);
+    }
+    const setfolderDialog = () => {
+        setFolderDialog(true);
+        setFolderDialogClose(false);
+    }
+    const handleFolderClose = () => {
+        setFolderDialog(false);
+        setFolderDialogClose(true);
     }
 
     const inputFile = useRef(null);
-    const OpenFileDialog = () => {
-        inputFile.current.click();
-    };
+    // const OpenFileDialog = () => {
+    //     inputFile.current.click();
+    // };
     const onFileChangeCapture = (e) => {
         console.log("FileTab.js onFolderChangeCapture : file information : ", e.target.files);
     };
@@ -154,22 +180,21 @@ const FileTab = (props) => {
         showPositionDialog(true)
     }
 
-    useEffect(() => {
-        const getImageTree = async () => {
-            let response = await api_experiment.getImageTree()
-            let data = response.data
-            if(data.error) {
-                setTreeData([])
-                console.log("Error occured while invoking getImageTree api");
-                // alert("Error occured while getting the tree");
-            } else {
-                setTreeData(data.data);
-            }
-        }
-        getImageTree()
-            .catch(console.error)
-    }, [])
-
+    // useEffect(() => {
+    //     const getImageTree = async () => {
+    //         let response = await api_experiment.getImageTree()
+    //         let data = response.data
+    //         if(data.error) {
+    //             setTreeData([])
+    //             console.log("Error occured while invoking getImageTree api");
+    //             // alert("Error occured while getting the tree");
+    //         } else {
+    //             setTreeData(data.data);
+    //         }
+    //     }
+    //     getImageTree()
+    //         .catch(console.error)
+    // }, [])
     return (
         <TabItem title="File/Edit">
             <input type="file" id="file" ref={inputFile} onChange={onFileChangeCapture} style={{ display: "none" }} />
@@ -177,13 +202,19 @@ const FileTab = (props) => {
             <SmallCard title="Open">
                 <CustomButton icon={mdiCloudDownloadOutline} label="Cloud" click={() => setCloudDialog(true)} />
                 {
-                    cloudDialog && <OpenCloudDialog handleClose={handleCloudClose} // treeData={treeData}
+                    cloudDialog && <OpenCloudUploadNew handleClose={handleCloudClose} treeData={treeData}
                     />
                 }
-                <CustomButton icon={mdiEmailNewsletter} label="File" click={() => { OpenFileDialog() }} />
-                <CustomButton icon={mdiFolderOpenOutline} label="Folder" click={() => { OpenFolderDialog() }} />
+                <CustomButton icon={mdiEmailNewsletter} label="File" click={() => { setFileDialog(true) }} />
+                {
+                    fileDialog && <OpenFileDialog handleClose={handleFileClose} treeData={treeData} />
+                }
+                <CustomButton icon={mdiFolderOpenOutline} label="Folder" click={() => { setFolderDialog(true) }} />
+                {
+                    folderDialog && <OpenFolderUpload handleClose={handleFolderClose} treeData={treeData} />
+                }
                 <CustomButton icon={mdiDotsGrid} label="Position" click={() => showPositionDialog(true)} />
-                {positionDialog && <OpenPositionDialog title=" " handleClose={handleClose} setCloudDialog={setCloudDialog} selectTab={selectTab}/>}
+                {positionDialog && <OpenPositionDialog title=" " handleClose={handleClose} setCloudDialog={setCloudDialog} cloudDialogClose={cloudDialogClose} selectTab={selectTab}/>}
             </SmallCard>
             <Divider />
             <SmallCard title="Save / Load">

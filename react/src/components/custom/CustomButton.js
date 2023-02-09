@@ -44,12 +44,12 @@ const CustomButton = (props) => {
         //         <div className="label-text">{props.label}</div>
         //     </div>
         // </IconButton>
-        <div className='custom-button text-center' onClick={props.click}
+        <div className='custom-button' onClick={props.click}
             style={{ minWidth: "25px", height: props.label ? '36px' : '22px', color: `${COLORS.LIGHT_CYAN}` }}
         >
             {
                 props.image &&
-                <Image style={{ margin: '0 auto', width: '15px', height: '15px' }} src={require("../../assets/images/" + props.image + ".png")} alt='no image' />
+                <Image style={{ margin: '0 auto', width: '11px', height: '11px' }} src={require("../../assets/images/" + props.image + ".png")} alt='no image' />
             }
             {
                 props.icon &&

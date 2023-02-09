@@ -2,16 +2,23 @@ import React, {useState, useEffect} from 'react';
 import {
     Checkbox, Button
 } from '@mui/material';
+import {
+    mdiPlus,
+    mdiMenuUp,
+    mdiMenuDown,
+    mdiPalette
+} from '@mdi/js'
 import shallow from 'zustand/shallow';
 import {connect} from 'react-redux';
-
+import Icon from '@mdi/react';
 import {
     useChannelsStore,
     useImageSettingsStore,
 } from '../../../viv/state';
 import SmallCard from '../../../custom/SmallCard';
 import {COLORMAP_SLIDER_CHECKBOX_COLOR} from '../../../constant/constants';
-
+import { DropdownButton } from 'react-bootstrap';
+import { useSelector } from 'react-redux';
 
 const toRgb = (on, arr) => {
     const color = on ? COLORMAP_SLIDER_CHECKBOX_COLOR : arr;
@@ -24,7 +31,6 @@ const mapStateToProps = state => ({
 const Channel = (props) => {
 
     const [colorType, setColorType] = useState(true);
-
     const channels = [
         {id: 0, label: "S", color: "black", disabled: true, current_id: -1, rgbColor: [255, 255, 255], channelsVisible: false},
         {id: 1, label: "B", color: "blue", disabled: true, current_id: -1, rgbColor: [0, 0, 255], channelsVisible: false},
@@ -34,6 +40,10 @@ const Channel = (props) => {
         {id: 5, label: "Y", color: "yellow", disabled: true, current_id: -1, rgbColor: [255, 255, 0], channelsVisible: false},
         {id: 6, label: "M", color: "magenta", disabled: true, current_id: -1, rgbColor: [255, 0, 255], channelsVisible: false},
     ];
+    const [showingChannels, setShowingChannels] = useState(1);
+    const maxChannelsNum = channels.length;
+    const [upButton, setUpButton] = useState(showingChannels==1)
+    // cosnt [downButton, setDown]
     const [channelsVisible, colors, ids, toggleIsOnSetter
     ] = useChannelsStore(
         store => [
@@ -44,6 +54,8 @@ const Channel = (props) => {
         ],
         shallow
     );
+    const SelectedChannel = useSelector( state => state.vessel.channels)
+    
     // const loader = useLoader();
     // const [channelOptions, useLinkedView, use3d, useColormap, useLens, isChannelLoading, setIsChannelLoading, removeIsChannelLoading, pixelValues, isViewerLoading
     // ] = useViewerStore(
@@ -104,7 +116,6 @@ const Channel = (props) => {
     }
     
     const renderItems = (channels) => {
-        // console.log("renderItems", colors, ids, channelsVisible);
         let current_channels = channels;
         let isLoading = false;
         let rgbColor = toRgb(colormap, [0, 0, 0]);
@@ -126,8 +137,8 @@ const Channel = (props) => {
                 <div key={i} className="d-flex flex-column channel-box text-center">
                     <Checkbox
                         onChange={() => {toggleIsOn(channel.current_id)}}
-                        checked={channel.channelsVisible}
-                        disabled={channel.disabled}
+                        checked={channel.id==SelectedChannel[0]}
+                        disabled={SelectedChannel!=null}
                         size="small"
                         // checked={channelsArray.lenght > 0 ? channelsArray.includes(i) : false}
                         sx={{color: isLoading ? rgbColor : channel.color, padding: 0, '&.Mui-checked': {color: isLoading ? rgbColor : channel.color, }}} />
@@ -147,10 +158,20 @@ const Channel = (props) => {
                         <Button className="py-0" onClick={(e) => onColorMono()} variant="contained" color="primary" size="small">Color/Mono</Button>
                     </div>
                 </div>
-                <div>
+                <div >
+                    
                     <SmallCard>
+                        <div className="d-block">
+                            <div className="d-block border mx-auto pr-3 pb-3" style={{width: "17px", height: "17px"}}> <Icon path={mdiPlus} size={0.7} /></div>
+                            <div className="d-block border mx-auto pr-3 pb-3 mt-1" style={{width: "17px", height: "17px"}}> <Icon path={mdiPalette} size={0.7} /></div>
+                        </div>
                         {renderItems(channels)}
+                        <div>
+                        <div className="d-block border mx-auto pr-3 pb-3" style={{width: "17px", height: "17px"}}> <Icon path={mdiMenuUp} size={0.7} /></div>
+                            <div className="d-block border mx-auto pr-3 pb-3 mt-1" style={{width: "17px", height: "17px"}}> <Icon path={mdiMenuDown} size={0.7} /></div>
+                        </div>
                     </SmallCard>
+                    
                 </div>
             </div>
         </>

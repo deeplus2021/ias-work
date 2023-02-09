@@ -23,7 +23,7 @@ Please run the reset.sh script and once that has finished running you can run st
   ```sh
   $ cd react
   
-  # this will install all modules and could take some time
+  # this will install all modules and could take some time (case: npm -v < 9.0.0)
   $ npm install 
   
   # this will build and serve the project.
@@ -76,24 +76,16 @@ The gole is Viv viewer to display every images on frontend by using backend that
     * This is important part in this project. 
 
 *** This project structure is configured as perfectly and as well for image processing and viv viewer.
-
-### About Azure: no longer used
-Use Azure for server and link subscription to Microsoft Azure Sponsorship.
-https://portal.azure.com/#home
-ID: daisukekubota@outlook.jp
-Pass : Kubo@0823
-
 ### About GCP
 Current(24.10.2022) use GCP for server and link subscription google.
 https://console.cloud.google.com/home/dashboard?project=capable-alcove-265511
-ID: daisukekubota0823@google.com
-Pass : Life@Analytics
 
 To be able to operate on the following sites.
   - Project Name : LifeAnalytics
   - Vm instance : Compute Engine / Vm Instances / lifeanalytics-vm
+  - Debian version : 9.2
   - External IP : 34.72.210.99
-  - account name(ssh key account) : iasgcp
+  - account name(ssh key account) : iasgcp (ias-project-react repository)
   - Reference File : gitaction workflow command - ssh_ci.yml
   
   
