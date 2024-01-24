@@ -246,7 +246,7 @@ const MainFrame = () => {
                             {leftTabVal === 0 && <TabContainer ><DLMLTab /></TabContainer>}
                             {leftTabVal === 1 && <TabContainer><AdjustTab /></TabContainer>}
                             {leftTabVal === 2 && <TabContainer><FilterTab /></TabContainer>}
-                            {/* {leftTabVal === 3 && <TabContainer><FileTab /></TabContainer>} */}
+                            {leftTabVal === 3 && <TabContainer><FileTab /></TabContainer>}
                         </div>
                     </Col>
                     <Col xs={8} ref={imageViewAreaRef} style={{
