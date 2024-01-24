@@ -248,6 +248,24 @@ const MainFrame = () => {
                             {leftTabVal === 2 && <TabContainer><FilterTab /></TabContainer>}
                             {leftTabVal === 3 && <TabContainer><FileTab /></TabContainer>}
                         </div>
+                        <div className='card boarder'>
+                            <Tabs
+                                // variant="scrollable"
+                                value={leftTabVal}
+                                aria-label="tabs example"
+                                TabIndicatorProps={{
+                                    style: {
+                                        flexDirection: "row-right",
+                                        justifyContent: "flex-start"
+                                    }
+                                }}
+                            >
+                                <Tab className='tab-button' key={0} icon={<SchoolIcon />} aria-label="school" value={0} onFocus={() => handleLeftTabChange(0)} />
+                                <Tab className='tab-button' key={1} icon={<TuneIcon />} aria-label="tune" value={1} onFocus={() => handleLeftTabChange(1)} />
+                                <Tab className='tab-button' key={2} icon={<FilterAltIcon />} aria-label="filter" value={2} onFocus={() => handleLeftTabChange(2)} />
+                                <Tab className='tab-button' key={3} icon={<InsertDriveFileIcon />} aria-label="file" value={3} onFocus={() => handleLeftTabChange(3)} />
+                            </Tabs>
+                        </div>
                     </Col>
                     <Col xs={8} ref={imageViewAreaRef} style={{
                         backgroundColor: "#ddd", 
